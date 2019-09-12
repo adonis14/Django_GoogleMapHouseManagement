@@ -1,0 +1,61 @@
+<div>
+  <h1 class="side">My Saved Locations</h1>
+    {% if houses %}
+    <table id = "location_tbl">
+        {% for house in houses %}
+          <tr id="house{{ house.id }}">
+            
+            <td style="cursor:pointer;vertical-align:top;padding:0;width:125px;"
+             onclick="flyto( {{ house.latitude }}, {{ house.longitude }} )">
+              {{ house.location|cut:", United States" }}
+            </td>
+            <td style="cursor:pointer;vertical-align:top;">
+              <a href="housemanage/showhouse/{{ house.id }}">
+              <input id="editIcon{{ forloop.counter }}" type="image"
+                 src='/media/icons/show1.png' alt="Show House"
+                 title="Show" style="width:25px; float:left"
+                 onmouseover="onShowHover({{ forloop.counter }});"
+                 onmouseout="offShowHover({{ forloop.counter }});"/></a>
+            </td> 
+            <td style="cursor:pointer;vertical-align:top;">
+              <form method="post" action="housemanage/deletehouse/"
+               onsubmit="return confirm('Do you really want to delete {{ house.location|cut:", Ukiane" }}?');">
+              {% csrf_token %}
+                <input type="hidden" name="pk" value="{{ house.pk }}"/>
+                <input id="deleteIcon{{ forloop.counter }}" type="image"
+                 src='/media/icons/bin1.png' alt="Delete Point"
+                 title="Delete Point" style="width:25px; float:left"
+                 onmouseover="onDeleteHover({{ forloop.counter }});"
+                 onmouseout="offDeleteHover({{ forloop.counter }});"/>
+              </form>
+            </td> 
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>You do not have any saved locations</p>
+    {% endif %}
+  </div>
+
+  <script>
+  function flyto(lat, lon) {
+    map.setCenter(new google.maps.LatLng(lat, lon));
+  }
+  function onDeleteHover(x)
+  {
+    $("#deleteIcon"+x).attr('src', '/media/icons/bin2.png');
+  }
+
+  function offDeleteHover(x)
+  {
+    $("#deleteIcon"+x).attr('src', '/media/icons/bin1.png');
+  }
+  function onShowHover(x)
+  {
+    $("#editIcon"+x).attr('src', '/media/icons/show1.png');
+  }
+  function offShowHover(x)
+  {
+    $("#editIcon"+x).attr('src', '/media/icons/show2.png');
+  }
+  </script>

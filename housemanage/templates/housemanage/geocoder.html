@@ -1,0 +1,119 @@
+<div id="geocoder">
+    <h1 class="side">Add a House</h1>
+    <input type='text' oninput='geocodeThis()' id='search' placeholder="Enter Address Here" >
+    <ul id='results' style="background-color:transparent;padding: unset;">
+        
+    </ul>
+    <div id='categories'>
+        <form method="post" action="housemanage/addhouse/">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="buttonloc" type="submit">Save House</button>
+        </form>
+    </div>
+</div>
+<script>  
+
+$.fn.isInViewport = function() {
+    var elementTop = $(this).offset().top;
+    var elementBottom = elementTop + $(this).outerHeight();
+    var viewportTop = $(window).scrollTop();
+    var viewportBottom = viewportTop + $(window).height();
+    return elementBottom > viewportTop && elementTop < viewportBottom;
+};
+function geocodeThis() {
+    var address = $("#search").val();
+    var geocoder = new google.maps.Geocoder();
+
+    if (geocoder) {
+        geocoder.geocode({ 'address': address }, function (results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                updateResults(results[0])
+            }
+            else {
+            console.log("Geocoding failed: " + status);
+            }
+        });
+    }    
+    if(search.value){
+        $("#id_location").attr('disabled',false);
+    }else{
+        $("#id_location").attr('disabled',true);
+    }
+}
+
+function httpGetAsync(theUrl, callback)
+{
+    var xmlHttp = new XMLHttpRequest({mozSystem: true});
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.send(null);
+}
+
+function panto(latlon) {
+    map.setZoom(13);
+    map.panTo(latlon);
+}
+
+function createMarker(place) {
+    var marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location
+    });
+
+    google.maps.event.addListener(marker, 'click', function() {
+        infowindow.setContent(place.name);
+        infowindow.open(map, this);
+    });
+}
+
+
+function updateResults(json) {
+   
+    var myNode = document.getElementById("results");
+    while (myNode.firstChild) {
+        myNode.removeChild(myNode.firstChild);
+    }
+    data = json.address_components.slice(0,4);
+    for (feature in data) {
+        f = data[feature];
+        var entry = document.createElement('li');
+        entry.setAttribute('id', 'feature');
+        placename = document.createElement('div');
+        placename.appendChild(document.createTextNode(f.long_name));
+        placename.setAttribute('id', 'place_name');
+        entry.appendChild(placename);
+        
+        entry.onclick = function() {
+            var request = {
+            query: f.long_name,
+            fields: ['name', 'geometry'],
+            };
+            var lat = ''
+            var lon = ''
+            service.findPlaceFromQuery(request, function(results, status) {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    for (var i = 0; i < results.length; i++) {
+                        createMarker(results[i]);
+                    }
+                    lat = results[0].geometry.location.lat()
+                    lon = results[0].geometry.location.lng()
+                    console.log(lat,lon);
+                    map.setCenter(results[0].geometry.location);
+                    document.getElementById("id_location").value=f.long_name;
+                    document.getElementById("id_latitude").value=lat;
+                    document.getElementById("id_longitude").value=lon;
+                }
+            });
+            while (myNode.firstChild) {
+                myNode.removeChild(myNode.firstChild);
+            }
+            
+        }
+        myNode.appendChild(entry);
+    }
+}
+</script>
